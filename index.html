@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ритм — трекер привычек</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="rollback.css" />
+  <link rel="stylesheet" href="stats-overrides.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow" id="todayLabel"></p>
+        <h1>Мои привычки</h1>
+      </div>
+      <div class="header-actions">
+        <button class="group-add-icon" id="addGroup" aria-label="Создать группу" title="Создать группу"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5h6l2 2h9v10h-17zM16 11v5m-2.5-2.5h5"/></svg></button>
+        <button class="add-button" id="openModal" aria-label="Добавить привычку"><span>+</span></button>
+      </div>
+    </header>
+
+    <section class="summary" aria-label="Статистика за сегодня">
+      <div class="progress-ring" id="progressRing"><strong id="progressPercent">0%</strong></div>
+      <div><p>Сегодня</p><h2 id="summaryText">Начнём с малого</h2></div>
+    </section>
+
+    <section class="habit-board">
+      <div class="date-row" id="dateRow"></div>
+      <div class="habit-list" id="habitList"></div>
+      <div class="empty-state" id="emptyState" hidden>
+        <div>✦</div><h2>Здесь пока тихо</h2><p>Добавьте первую привычку — всего один маленький шаг.</p>
+        <button class="primary" id="emptyAdd">Добавить привычку</button>
+      </div>
+    </section>
+
+    <section class="stats-section" aria-labelledby="statsTitle">
+      <div class="stats-header">
+        <div><p class="eyebrow">Экспериментальный режим</p><h2 id="statsTitle">Недельная статистика</h2></div>
+        <details class="habit-selector">
+          <summary>Сравнить привычки <span id="statsCount">0/3</span></summary>
+          <div class="habit-selector-menu" id="statsHabitList"></div>
+        </details>
+      </div>
+      <div class="week-navigation">
+        <button id="previousWeek" aria-label="Предыдущая неделя">←</button>
+        <strong id="weekRange"></strong>
+        <button id="nextWeek" aria-label="Следующая неделя">→</button>
+      </div>
+      <div class="chart-legend" id="chartLegend"></div>
+      <div class="chart-wrap" id="chartWrap">
+        <svg id="weeklyChart" viewBox="0 0 800 320" role="img" aria-label="График выполнения привычек за семь дней"></svg>
+      </div>
+      <div class="chart-empty" id="chartEmpty" hidden>Выберите хотя бы одну привычку для отображения.</div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="modal" hidden>
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <header><button class="text-button" id="closeModal">Отмена</button><h2 id="modalTitle">Новая привычка</h2><button class="save-button" id="saveHabit" disabled>Готово</button></header>
+      <div class="form-body">
+        <label class="field"><span>Название</span><input id="habitName" maxlength="42" placeholder="Например, читать 20 минут" autofocus /></label>
+        <div class="field"><span>Цвет</span><div class="colors" id="colorPicker"></div></div>
+        <div class="field"><span>Тип отметки</span><div class="type-picker" id="typePicker">
+          <button class="type-option selected" data-type="binary"><strong>✓</strong><div>Выполнено</div><small>Да или нет</small></button>
+          <button class="type-option" data-type="percent"><strong>50%</strong><div>Прогресс</div><small>От 0 до 100%</small></button>
+          <button class="type-option" data-type="quantity"><strong>7/8</strong><div>Количество</div><small>Факт относительно цели</small></button>
+        </div></div>
+        <label class="summary-toggle"><div><strong>Учитывать в общем прогрессе</strong><small>Добавлять привычку в показатель «Сегодня»</small></div><input id="includeSummary" type="checkbox" checked /><span></span></label>
+        <label class="field goal-field" id="goalField" hidden><span>Дневная цель</span><input id="habitGoal" type="number" min="1" step="1" value="1" placeholder="Например, 8" /></label>
+      </div>
+    </section>
+  </div>
+  <div class="confirm-backdrop" id="deleteConfirm" hidden>
+    <section class="confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div class="confirm-icon" aria-hidden="true">⌫</div>
+      <h2 id="confirmTitle">Удалить привычку?</h2>
+      <p>Вы точно уверены, что хотите удалить эту задачу?</p>
+      <div class="confirm-actions">
+        <button class="confirm-no" id="cancelDelete">Нет</button>
+        <button class="confirm-yes" id="confirmDelete">Окей</button>
+      </div>
+    </section>
+  </div>
+  <div class="group-modal-backdrop" id="groupModal" hidden>
+    <section class="group-modal-card" role="dialog" aria-modal="true" aria-labelledby="groupModalTitle">
+      <h2 id="groupModalTitle">Новая группа</h2>
+      <label><span>Название группы</span><input id="groupName" maxlength="30" placeholder="Например, Здоровье" /></label>
+      <button class="delete-group-button" id="deleteGroup" hidden>Удалить группу</button>
+      <div class="group-modal-actions"><button id="cancelGroup">Отмена</button><button id="saveGroup" disabled>Сохранить</button></div>
+    </section>
+  </div>
+  <div class="percent-backdrop" id="percentModal" hidden>
+    <section class="percent-card" role="dialog" aria-modal="true" aria-labelledby="percentTitle">
+      <h2 id="percentTitle">Отметить прогресс</h2>
+      <p id="percentDate"></p>
+      <div class="percent-value" id="percentValue">0%</div>
+      <input id="percentRange" type="range" min="0" max="100" step="10" value="0" aria-label="Процент выполнения" />
+      <div class="percent-actions"><button id="cancelPercent">Отмена</button><button id="savePercent">Сохранить</button></div>
+    </section>
+  </div>
+  <div class="quantity-backdrop" id="quantityModal" hidden>
+    <section class="quantity-card" role="dialog" aria-modal="true" aria-labelledby="quantityTitle">
+      <h2 id="quantityTitle">Отметить количество</h2>
+      <p id="quantityDate"></p>
+      <div class="quantity-value-display"><strong id="quantitySelected">0</strong><span id="quantityGoalLabel">из 1</span></div>
+      <input id="quantityValue" type="range" min="0" max="1" step="1" value="0" aria-label="Количество выполненного" />
+      <div class="quantity-percent" id="quantityPercent">0%</div>
+      <div class="percent-actions"><button id="cancelQuantity">Отмена</button><button id="saveQuantity">Сохранить</button></div>
+    </section>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
